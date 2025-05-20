@@ -143,7 +143,9 @@ namespace QuantConnect.Configuration
 
                 // parameters to set in the algorithm (the below are just samples)
                 new CommandLineOption("parameters", CommandOptionType.MultipleValue),
-                new CommandLineOption("environments", CommandOptionType.MultipleValue)
+                new CommandLineOption("environments", CommandOptionType.MultipleValue),
+                // scale playback time versus wall-clock (data-time:wall time ratio)
+                new CommandLineOption("time-scale", CommandOptionType.SingleValue)
             };
 
         /// <summary>

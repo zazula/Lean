@@ -1764,7 +1764,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void SendWarningOnPriceChange(string priceType, decimal priceRound, decimal priceOriginal)
         {
-            if (!priceOriginal.Equals(priceRound))
+            // rz: disable
+            if (false && !priceOriginal.Equals(priceRound))
             {
                 _algorithm.Error(
                     $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()} was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"

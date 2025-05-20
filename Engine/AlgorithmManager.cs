@@ -160,6 +160,11 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
+            // playback throttle for backtest: map data-time to wall-clock via time-scale
+            var timeScale = Config.GetDouble("time-scale", 1.0);
+            var doThrottle = !_liveMode && Math.Abs(timeScale - 1.0) > 1e-9;
+            DateTime originDataUtc = default(DateTime);
+            DateTime originWallUtc = default(DateTime);
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
@@ -183,6 +188,19 @@ namespace QuantConnect.Lean.Engine
                 leanManager.Update();
 
                 time = timeSlice.Time;
+                // throttle replay to real-time (or custom scale)
+                if (doThrottle)
+                {
+                    if (originDataUtc == default(DateTime))
+                    {
+                        originDataUtc = time;
+                        originWallUtc = DateTime.UtcNow;
+                    }
+                    var dataDelta = time - originDataUtc;
+                    var desiredWallTime = originWallUtc + TimeSpan.FromTicks((long)(dataDelta.Ticks / timeScale));
+                    var wait = desiredWallTime - DateTime.UtcNow;
+                    if (wait > TimeSpan.Zero) Thread.Sleep(wait);
+                }
                 DataPoints += timeSlice.DataPointCount;
 
                 if (backtestMode && algorithm.Portfolio.TotalPortfolioValue <= 0)

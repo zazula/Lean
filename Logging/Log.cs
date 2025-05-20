@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -106,7 +106,11 @@ namespace QuantConnect.Logging
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+            try {
+                Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+            } catch (Exception err) {
+                _logHandler.Error(message);
+            }
         }
 
         /// <summary>
