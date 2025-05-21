@@ -54,10 +54,11 @@ RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
 ENV PIP_DEFAULT_TIMEOUT=120
 
 # Install numpy first to avoid it not being resolved when installing libraries that depend on it next
-RUN pip install --no-cache-dir numpy==1.26.4
+#RUN pip install --upgrade pip && pip install --no-cache-dir numpy==1.26.4
+RUN pip install --upgrade pip && pip install --no-cache-dir numpy==1.26.4
 
 # Install newer (than provided by ubuntu) cmake required by scikit build process
-RUN conda install -c conda-forge cmake==3.28.4 && conda clean -y --all
+RUN conda install -c conda-forge cmake==3.28.4 #&& conda clean -y --all
 
 # The list of packages in this image is shorter than the list in the AMD images
 # This list only includes packages that can be installed within 2 minutes on ARM
@@ -65,7 +66,7 @@ RUN pip install --no-cache-dir      \
     cython==3.0.9                   \
     pandas==2.1.4                   \
     scipy==1.11.4                   \
-    numpy==1.26.4                   \
+#   numpy==1.26.4                   \
     wrapt==1.16.0                   \
     astropy==6.0.0                  \
     beautifulsoup4==4.12.3          \
@@ -85,7 +86,7 @@ RUN pip install --no-cache-dir      \
     nltk==3.8.1                     \
     graphviz==0.20.1                \
     cmdstanpy==1.2.1                \
-    copulae==0.7.9                  \
+#    copulae==0.7.9                  \
     featuretools==1.30.0            \
     PuLP==2.8.0                     \
     pymc==5.10.4                    \
@@ -130,7 +131,7 @@ RUN pip install --no-cache-dir      \
     pandas_market_calendars==4.4.0  \
     ruptures==1.1.9                 \
     simpy==4.1.1                    \
-    scikit-learn-extra==0.3.0       \
+#    scikit-learn-extra==0.3.0       \
     ray==2.9.3                      \
     "ray[tune]"==2.9.3              \
     "ray[rllib]"==2.9.3             \
