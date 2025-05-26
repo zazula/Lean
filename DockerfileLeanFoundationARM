@@ -15,18 +15,24 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update \
     && apt-get install -y git libgtk2.0.0 bzip2 curl unzip wget python3-pip python3-opengl zlib1g-dev \
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
     r-base pandoc libcurl4-openssl-dev \
-    openjdk-11-jdk openjdk-11-jre bbe \
+    openjdk-17-jdk openjdk-17-jre bbe \
     && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dotnet 9 sdk & runtime
 # The .deb packages don't support ARM, the install script does
-ENV PATH="/root/.dotnet:${PATH}"
-RUN wget https://dot.net/v1/dotnet-install.sh && \
-    chmod 777 dotnet-install.sh && \
-    ./dotnet-install.sh -c 9.0 && \
-    rm dotnet-install.sh
-ENV DOTNET_ROOT="/root/.dotnet"
+#ENV PATH="/root/.dotnet:${PATH}"
+#RUN wget https://dot.net/v1/dotnet-install.sh && \
+#    chmod 777 dotnet-install.sh && \
+#    ./dotnet-install.sh -c 9.0 && \
+#    rm dotnet-install.sh
+#ENV DOTNET_ROOT="/root/.dotnet"
+
+RUN add-apt-repository ppa:dotnet/backports && apt-get update && apt-get install -y dotnet-sdk-9.0 && \
+    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y dotnet-sdk-6.0 && \
+    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
 # Set PythonDLL variable for PythonNet
 ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.11.so"
@@ -38,19 +44,20 @@ RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
     bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
 
 # Install java runtime for h2o lib
-RUN apt-get update && apt-get install -y alien dpkg-dev debhelper build-essential && wget https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-aarch64_bin.rpm \
-    && alien -i jdk-17.0.12_linux-aarch64_bin.rpm \
-    && update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17.0.12-oracle-aarch64/bin/java 1 \
-    && rm jdk-17.0.12_linux-aarch64_bin.rpm
+#RUN apt-get update && apt-get install -y alien dpkg-dev debhelper build-essential && wget https://download.oracle.com/java/17/latest/jdk-17_linux-aarch64_bin.rpm \
+#    && alien -i jdk-17_linux-aarch64_bin.rpm \
+#    && update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17-oracle-aarch64/bin/java 1 \
+#    && rm jdk-17_linux-aarch64_bin.rpm
 
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
 
 # Install numpy first to avoid it not being resolved when installing libraries that depend on it next
-RUN pip install --no-cache-dir numpy==1.26.4
+#RUN pip install --upgrade pip && pip install --no-cache-dir numpy==1.26.4
+RUN pip install --upgrade pip && pip install --no-cache-dir numpy==1.26.4
 
 # Install newer (than provided by ubuntu) cmake required by scikit build process
-RUN conda install -c conda-forge cmake==3.28.4 && conda clean -y --all
+RUN conda install -c conda-forge cmake==3.28.4 #&& conda clean -y --all
 
 # The list of packages in this image is shorter than the list in the AMD images
 # This list only includes packages that can be installed within 2 minutes on ARM
@@ -58,7 +65,7 @@ RUN pip install --no-cache-dir      \
     cython==3.0.9                   \
     pandas==2.1.4                   \
     scipy==1.11.4                   \
-    numpy==1.26.4                   \
+#   numpy==1.26.4                   \
     wrapt==1.16.0                   \
     astropy==7.0.0                  \
     beautifulsoup4==4.12.3          \
@@ -272,6 +279,20 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 # Install fonts for matplotlib
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
+
+# rz: multi-arch for optimize
+RUN cat /etc/apt/sources.list | grep -v ports > /tmp/x
+RUN mv /tmp/x /etc/apt/sources.list
+RUN dpkg --add-architecture amd64
+RUN echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu lunar main restricted universe multiverse' >> /etc/apt/sources.list
+RUN echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu lunar-updates main restricted universe multiverse' >> /etc/apt/sources.list
+RUN echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu lunar-security main restricted universe multiverse' >> /etc/apt/sources.list
+
+# Install libraries
+RUN apt clean
+#RUN apt update
+RUN apt upgrade -y
+#RUN apt install -y libc6:amd64
 
 # label definitions
 LABEL strict_python_version=3.11.11

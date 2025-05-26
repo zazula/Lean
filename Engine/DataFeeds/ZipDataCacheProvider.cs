@@ -86,10 +86,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     // bad luck, thread race condition
                                     // it was disposed and removed after we got it
                                     // so lets create it again and add it
+                                    Log.Debug("opening: " + filename + " for: " + entryName);
                                     stream = CacheAndCreateEntryStream(filename, entryName);
                                 }
                                 else
                                 {
+                                    Log.Debug("reusing: " + filename + " for: " + entryName);
                                     existingZip.Refresh();
                                     stream = CreateEntryStream(existingZip, entryName, filename);
                                 }
@@ -97,7 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                         catch (Exception exception)
                         {
-                            if (exception is ZipException || exception is ZlibException)
+                            if (true || exception is ZipException || exception is ZlibException)
                             {
                                 Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
                             }

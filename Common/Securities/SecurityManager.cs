@@ -147,6 +147,10 @@ namespace QuantConnect.Securities
         /// <returns>Bool true if contains this symbol pair</returns>
         public override bool ContainsKey(Symbol symbol)
         {
+            if ( symbol == null ) {
+                return false;
+            }
+                
             lock (_securityManager)
             {
                 return _completeSecuritiesCollection.ContainsKey(symbol);

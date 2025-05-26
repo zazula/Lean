@@ -108,7 +108,11 @@ namespace QuantConnect.Logging
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+            try {
+                Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+            } catch (Exception err) {
+                _logHandler.Error(message);
+            }
         }
 
         /// <summary>

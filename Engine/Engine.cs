@@ -75,6 +75,21 @@ namespace QuantConnect.Lean.Engine
             AlgorithmHandlers = algorithmHandlers;
             _marketHoursDatabaseTask = Task.Run(StaticInitializations);
         }
+        /// <summary>
+        /// Wraps the base IDataFeedTimeProvider in scaled providers, if configured via 'time-scale'.
+        /// </summary>
+        private IDataFeedTimeProvider CreateTimeProvider(IDataFeedTimeProvider baseProvider)
+        {
+            var scale = Config.GetDouble("time-scale", 1.0);
+            if (Math.Abs(scale - 1.0) < 1e-9)
+            {
+                return baseProvider;
+            }
+            return new DataFeedTimeProvider(
+                new ScaledTimeProvider(baseProvider.TimeProvider, scale),
+                new ScaledTimeProvider(baseProvider.FrontierTimeProvider, scale)
+            );
+        }
 
         /// <summary>
         /// Runs a single backtest/live job from the job queue
@@ -90,6 +105,9 @@ namespace QuantConnect.Lean.Engine
 
             try
             {
+                Log.Trace($"before: cpu-allocation: {job.Controls.CpuAllocation}");
+                job.Controls.CpuAllocation = Config.GetInt("CpuAllocation", 10);
+                Log.Trace($"after: cpu-allocation: {job.Controls.CpuAllocation}");
                 Log.Trace($"Engine.Run(): Resource limits '{job.Controls.CpuAllocation}' CPUs. {job.Controls.RamAllocation} MB RAM.");
                 TextSubscriptionDataSourceReader.SetCacheSize((int) (job.RamAllocation * 0.4));
 
@@ -183,7 +201,7 @@ namespace QuantConnect.Lean.Engine
                         AlgorithmHandlers.FactorFileProvider,
                         AlgorithmHandlers.DataProvider,
                         dataManager,
-                        (IDataFeedTimeProvider) synchronizer,
+                        CreateTimeProvider(synchronizer),
                         AlgorithmHandlers.DataPermissionsManager.DataChannelProvider);
 
                     // set the history provider before setting up the algorithm

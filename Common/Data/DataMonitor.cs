@@ -66,7 +66,7 @@ namespace QuantConnect.Data
         /// Event handler for the <see cref="IDataProvider.NewDataRequest"/> event
         /// </summary>
         public void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e)
-        {
+        {            
             if (_exited)
             {
                 return;

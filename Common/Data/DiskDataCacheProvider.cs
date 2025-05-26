@@ -66,6 +66,7 @@ namespace QuantConnect.Data
             {
                 if (!File.Exists(filePath))
                 {
+                    Log.Error("DiskDataCacheProvider.Fetch(): File not present at " + filePath);
                     return null;
                 }
 
@@ -84,6 +85,7 @@ namespace QuantConnect.Data
                             // Attempt to find our specific entry
                             if (!zip.ContainsEntry(entryName))
                             {
+                                Log.Error("DiskDataCacheProvider.Fetch(): Entry : " + entryName + " notfound in " + filePath);
                                 return null;
                             }
 
